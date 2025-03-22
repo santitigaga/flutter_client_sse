@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
+import 'package:flutter_client_sse/retry_options.dart';
 import 'package:flutter_client_sse/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
@@ -30,41 +31,38 @@ class SSEClient {
   /// [limitReachedCallback] is a callback function that will be called when the
   /// maximum number of retries is reached.
   ///
-  static void _retryConnection(
-      {required SSERequestType method,
-      required String url,
-      required Map<String, String> header,
-      required StreamController<SSEModel> streamController,
-      Map<String, dynamic>? body,
-      required int maxRetryTime,
-      required int minRetryTime,
-      required int maxRetry,
-      required int currentRetry,
-      Future Function()? limitReachedCallback}) {
-    _log.finest('$currentRetry retry of  $maxRetry retries');
+  static void _retryConnection({
+    required SSERequestType method,
+    required String url,
+    required Map<String, String> header,
+    required StreamController<SSEModel> streamController,
+    Map<String, dynamic>? body,
+    required RetryOptions retryOptions,
+    required int currentRetry,
+  }) {
+    _log.finest('$currentRetry retry of  ${retryOptions.maxRetry} retries');
 
-    if (maxRetry != 0 && currentRetry >= maxRetry) {
+    if (retryOptions.maxRetry != 0 && currentRetry >= retryOptions.maxRetry) {
       _log.info('---MAX RETRY REACHED---');
-      limitReachedCallback?.call();
+      retryOptions.limitReachedCallback?.call();
       streamController.close();
       return;
     }
     _log.info('---RETRY CONNECTION---');
-    int delay = _delay(currentRetry, minRetryTime, maxRetryTime);
+    int delay = _delay(
+        currentRetry, retryOptions.minRetryTime, retryOptions.maxRetryTime);
     _log.finest('waiting for $delay ms');
 
     Future.delayed(Duration(milliseconds: delay), () {
       subscribeToSSE(
-          method: method,
-          url: url,
-          header: header,
-          body: body,
-          oldStreamController: streamController,
-          maxRetryTime: maxRetryTime,
-          minRetryTime: minRetryTime,
-          maxRetry: maxRetry,
-          retryCount: currentRetry + 1,
-          limitReachedCallback: limitReachedCallback);
+        method: method,
+        url: url,
+        header: header,
+        body: body,
+        oldStreamController: streamController,
+        retryOptions: retryOptions,
+        retryCount: currentRetry + 1,
+      );
     });
   }
 
@@ -105,12 +103,10 @@ class SSEClient {
     StreamController<SSEModel>? oldStreamController,
     http.Client? client,
     Map<String, dynamic>? body,
-    int maxRetryTime = 5000,
-    int minRetryTime = 5000,
-    int maxRetry = 5,
+    RetryOptions? retryOptions,
     int retryCount = 0,
-    Future Function()? limitReachedCallback,
   }) {
+    RetryOptions _retryOptions = retryOptions ?? RetryOptions();
     StreamController<SSEModel> streamController = StreamController();
     if (oldStreamController != null) {
       streamController = oldStreamController;
@@ -148,11 +144,8 @@ class SSEClient {
               header: header,
               body: body,
               streamController: streamController,
-              maxRetryTime: maxRetryTime,
-              minRetryTime: minRetryTime,
+              retryOptions: _retryOptions,
               currentRetry: retryCount,
-              maxRetry: maxRetry,
-              limitReachedCallback: limitReachedCallback,
             );
             return;
           }
@@ -205,11 +198,8 @@ class SSEClient {
                       url: url,
                       header: header,
                       streamController: streamController,
-                      maxRetryTime: maxRetryTime,
-                      minRetryTime: minRetryTime,
+                      retryOptions: _retryOptions,
                       currentRetry: retryCount,
-                      maxRetry: maxRetry,
-                      limitReachedCallback: limitReachedCallback,
                     );
                 }
               },
@@ -222,11 +212,8 @@ class SSEClient {
                   header: header,
                   body: body,
                   streamController: streamController,
-                  maxRetryTime: maxRetryTime,
-                  minRetryTime: minRetryTime,
                   currentRetry: retryCount,
-                  maxRetry: maxRetry,
-                  limitReachedCallback: limitReachedCallback,
+                  retryOptions: _retryOptions,
                 );
               },
             );
@@ -239,11 +226,8 @@ class SSEClient {
             header: header,
             body: body,
             streamController: streamController,
-            maxRetryTime: maxRetryTime,
-            minRetryTime: minRetryTime,
+            retryOptions: _retryOptions,
             currentRetry: retryCount,
-            maxRetry: maxRetry,
-            limitReachedCallback: limitReachedCallback,
           );
         });
       } catch (e) {
@@ -255,11 +239,8 @@ class SSEClient {
           header: header,
           body: body,
           streamController: streamController,
-          maxRetryTime: maxRetryTime,
-          minRetryTime: minRetryTime,
+          retryOptions: _retryOptions,
           currentRetry: retryCount,
-          maxRetry: maxRetry,
-          limitReachedCallback: limitReachedCallback,
         );
       }
       return streamController.stream;
