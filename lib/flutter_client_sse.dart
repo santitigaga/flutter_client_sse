@@ -24,13 +24,8 @@ class SSEClient {
   /// [header] is a map of request headers.
   /// [body] is an optional request body for POST requests.
   /// [streamController] is required to persist the stream from the old connection
-  /// [maxRetryTime] is the maximum time to retry
-  /// [minRetryTime] is the minimum time to retry
-  /// [maxRetry] is the maximum number of retries before giving up. if set to 0,
-  /// it will retry indefinitely.
+  /// [retryOptions] is the options for retrying the connection.
   /// [currentRetry] is the current retry count.
-  /// [limitReachedCallback] is a callback function that will be called when the
-  /// maximum number of retries is reached.
   ///
   static void _retryConnection({
     required SSERequestType method,
@@ -94,13 +89,8 @@ class SSEClient {
   /// stream from the old connection.
   /// [client] is an optional http client used for testing purpose
   /// or custom client.
-  /// [maxRetryTime] is the maximum time to retry
-  /// [maxRetry] is the maximum number of retries before giving up. if set to 0,
-  /// it will retry indefinitely.
-  /// [minRetryTime] is the minimum time to retry
+  /// [retryOptions] is the options for retrying the connection.
   /// [retryCount] is the current retry count.
-  /// [limitReachedCallback] is a callback function that will be called when the
-  /// maximum number of retries is reached.
   ///
   /// Returns a [Stream] of [SSEModel] representing the SSE events.
   static Stream<SSEModel> subscribeToSSE({
