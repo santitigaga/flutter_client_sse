@@ -15,6 +15,7 @@ part 'sse_event_model.dart';
 class SSEClient {
   static http.Client _client = new http.Client();
   static final _log = Logger('SSEClient');
+  static bool _stopSignal = false;
 
   /// Retry the SSE connection after a delay.
   ///
@@ -40,6 +41,12 @@ class SSEClient {
     required RetryOptions retryOptions,
     required int currentRetry,
   }) {
+    if (_stopSignal) {
+      _log.info('---NO RETRY: STOP SIGNAL RECEIVED---');
+      streamController.close();
+      return;
+    }
+
     _log.finest('$currentRetry retry of  ${retryOptions.maxRetry} retries');
 
     if (retryOptions.maxRetry != 0 && currentRetry >= retryOptions.maxRetry) {
@@ -249,6 +256,7 @@ class SSEClient {
 
   /// Unsubscribe from the SSE.
   static void unsubscribeFromSSE() {
+    _stopSignal = true;
     _client.close();
   }
 }
