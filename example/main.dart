@@ -1,5 +1,5 @@
-import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
-import 'package:flutter_client_sse/flutter_client_sse.dart';
+import 'package:client_sse/constants/sse_request_type_enum.dart';
+import 'package:client_sse/flutter_client_sse.dart';
 
 void main() {
   ///GET REQUEST

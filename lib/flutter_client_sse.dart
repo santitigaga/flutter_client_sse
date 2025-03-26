@@ -3,9 +3,9 @@ library flutter_client_sse;
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_client_sse/constants/sse_request_type_enum.dart';
-import 'package:flutter_client_sse/retry_options.dart';
-import 'package:flutter_client_sse/utils.dart';
+import 'package:client_sse/constants/sse_request_type_enum.dart';
+import 'package:client_sse/retry_options.dart';
+import 'package:client_sse/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 

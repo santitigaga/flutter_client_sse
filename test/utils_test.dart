@@ -1,4 +1,4 @@
-import 'package:flutter_client_sse/utils.dart';
+import 'package:client_sse/utils.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
